@@ -4,7 +4,8 @@ In this repository, I want to implement those most amazing deep reinforcement le
 
 ## Attention model
 
-No one can ingore a model who combine recurrent network, convolutional network and reinforcement learning together. And it is the attention model. According to Mnih's paper[1],   
+No one can ingore a model who combine recurrent network, convolutional network and reinforcement learning together. And it is the attention model. According to Mnih's paper[1], recurrent attention model can finally focus on part of a image to extract the most useful information to help action layer take an action.
+![Alt text](/AttentionModel/ram.png)
 Until now, I implement two fancy deep reinforcement learning models, DQN and Attention model. 
 
 ![Alt Text](https://github.com/placeforyiming/DeepReinforcementLearning/blob/master/DQN/Pong.gif)
