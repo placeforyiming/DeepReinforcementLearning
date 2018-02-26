@@ -15,10 +15,10 @@ import gym
 
 model_method='DQN'
 
-N_Q=939         #how many times the Q has been updated
-         #how many episodes to play the game
+N_Q=939         #how many times the Q has been updated.(continue to train from)
+         		#how many episodes to play the game
 
-N_frame=4  #take how many frame as input
+N_frame=4  		 #take how many frame as input
 N_delay=4        #how long the action indure
 
 
@@ -35,7 +35,7 @@ lr=0.00025
 lr_eve=0.00025
 
 
-
+#Build policy network
 with tf.name_scope('main_network'):
 	Q=Q_function(batch_size=batch_size,n_frame=N_frame,action_num=6)
 	Q_value=Q.CNN_part()
@@ -44,48 +44,27 @@ with tf.name_scope('target_network'):
 	Target_Q=Q_function(batch_size=batch_size,n_frame=N_frame,action_num=6)
 	Target_Q_value=Target_Q.CNN_part()
 
-
 main_variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES , scope='main_network') 
 target_variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES , scope='target_network')
 assign_ops = []
 for main_var, target_var in zip(main_variables, target_variables):
 	assign_ops.append(tf.assign(target_var, tf.identity(main_var)))
-
 copy_operation = tf.group(*assign_ops)
-
-
-
-
 Act=tf.placeholder(tf.int32,shape=(batch_size,))
 Rew=tf.placeholder(tf.float32,shape=(batch_size,))
-
 Q_value_perAct=[]
 for i in range(batch_size):
 	Q_value_perAct.append(Q_value[i,Act[i]])
 Q_value_perAct=tf.transpose(tf.stack(Q_value_perAct))
-
-
 Target_Q_value=tf.stop_gradient(Target_Q_value)
-
-
-
-
-#Loss=tf.square((Rew+gamma*tf.reduce_max(Target_Q_value,axis=1))-Q_value_perAct)
-
 Loss=tf.losses.huber_loss(labels=(Rew+gamma*tf.reduce_max(Target_Q_value,axis=1)), predictions=Q_value_perAct)
-
 Loss=tf.reduce_mean(Loss)
-
 global_step=tf.placeholder(tf.float32, shape=())
 learning_rate_use = tf.train.exponential_decay(lr_eve, global_step, 10000, 0.98, staircase=True)
 trainer=tf.train.RMSPropOptimizer(learning_rate_use,0.99,0.0,1e-6)
-
-
 gvs = trainer.compute_gradients(Loss)
 
-
-
-
+#Clip gradient to avoid overlapping
 def ClipIfNotNone(grad):
     if grad is None:
         return grad
@@ -95,8 +74,7 @@ train_step = trainer.apply_gradients(clipped_gradients)
 Process=StateProcessor()
 
 
-
-
+#handle reward
 def Deal_reward(gamma,Reward):
 		#Give all 0 reward the last one (+1 or -1)
 	count=len(Reward)
@@ -116,28 +94,18 @@ def Deal_reward(gamma,Reward):
 
 
 
-
-	
-
-print ('!!!!')
-
-'''
+# Gathering the initial training dataset
 with tf.Session() as sess:
 	if N_Q==0:
 		sess.run(tf.global_variables_initializer())
 		saver = tf.train.Saver()
 		saver.save(sess,'./save/%s%d.ckpt' % (model_method, N_Q))
-		#tf.get_default_graph().finalize()
-
-
 	step=0
 	stop=0
 	raw_record={}
 	Observation=[]
 	Reward=[]
 	Action=[]
-	
-
 	while step<(initial_num_in_episode*(N_frame+N_delay-1)) or stop==0:
 		Initial=env.reset()
 		start_key=step
@@ -168,27 +136,21 @@ with tf.Session() as sess:
 		i=j+1
 		m=(N_frame+N_delay-1)*j
 		raw_record[str(i)]=(Observation[m:(m+N_frame)],sum(Reward[(m):(m+N_delay)]),Action[m],Observation[(m+(N_delay)):(m+(N_delay)+N_frame)])
-			
-'''
 
-	
 
+# learn by play
 while N_Q<Max_N_Q:
-	
 	lr_eve=lr*((0.98)**(N_Q))
 	if lr_eve<0.000000025:
 		lr_eve=0.000000025
-	
 	if N_Q<100:
 		sigma=(1000000-N_Q*10000)/1000000.0*0.9+0.1
-
 	else:
 		sigma=0.1
 	print (sigma)
 	print (lr_eve)
 	aver_score=[]
-
-	
+	# Define the graph again, since one can comment initial gathering when the model has been trained
 	if N_Q>0:
 		tf.reset_default_graph()
 		with tf.name_scope('main_network'):
@@ -198,50 +160,25 @@ while N_Q<Max_N_Q:
 		with tf.name_scope('target_network'):
 			Target_Q=Q_function(batch_size=batch_size,n_frame=N_frame,action_num=6)
 			Target_Q_value=Target_Q.CNN_part()
-
-
 		main_variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES , scope='main_network') 
 		target_variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES , scope='target_network')
 		assign_ops = []
 		for main_var, target_var in zip(main_variables, target_variables):
 			assign_ops.append(tf.assign(target_var, tf.identity(main_var)))
-
 		copy_operation = tf.group(*assign_ops)
-
-
-
-
 		Act=tf.placeholder(tf.int32,shape=(batch_size,))
 		Rew=tf.placeholder(tf.float32,shape=(batch_size,))
-
 		Q_value_perAct=[]
 		for i in range(batch_size):
 			Q_value_perAct.append(Q_value[i,Act[i]])
 		Q_value_perAct=tf.transpose(tf.stack(Q_value_perAct))
-
-
 		Target_Q_value=tf.stop_gradient(Target_Q_value)
-
-
-		#Loss=tf.square((Rew+gamma*tf.reduce_max(Target_Q_value,axis=1))-Q_value_perAct)
 		Loss=tf.losses.huber_loss(labels=(Rew+gamma*tf.reduce_max(Target_Q_value,axis=1)), predictions=Q_value_perAct)
-
 		Loss=tf.reduce_mean(Loss)
-		
 		global_step=tf.placeholder(tf.float32, shape=())
-		learning_rate_use = tf.train.exponential_decay(lr_eve, global_step,
-                                           10000, 0.98, staircase=True)
+		learning_rate_use = tf.train.exponential_decay(lr_eve, global_step,10000, 0.98, staircase=True)
 		trainer=tf.train.RMSPropOptimizer(learning_rate_use,0.99,0.0,1e-6)
-		
-
-		#trainer=tf.train.RMSPropOptimizer(0.00025,0.95,0.95,0.01)
-
-
 		gvs = trainer.compute_gradients(Loss)
-
-
-
-
 		def ClipIfNotNone(grad):
 		    if grad is None:
 		        return grad
@@ -251,47 +188,30 @@ while N_Q<Max_N_Q:
 		Process=StateProcessor()
 	
 
-	
+	# Start to learn by play
 	with tf.Session() as sess:
-			
 		checkpoint_path = './save/%s%d.ckpt' % (model_method, N_Q)
 		#saver = tf.train.import_meta_graph('./save/%s%d.ckpt' % (model_method,0)+'.meta')
 		saver = tf.train.Saver()
-		saver.restore(sess, checkpoint_path)  
-		'''
-		tf.get_default_graph()
-		trainer=tf.train.RMSPropOptimizer(lr_eve,0.99,0.0,1e-6)
+		saver.restore(sess, checkpoint_path)
 		tf.get_default_graph().finalize()
-		'''
-		tf.get_default_graph().finalize()
-
 		sess.run(copy_operation)
 		print (N_Q)
 		count=0
 		Initial=env.reset()
 		I=Process.process(sess,Initial)
-
-		
-
 		Play_input_data=[np.reshape(I.astype(np.float).ravel(),(1,7056))]
 		State_now=[]
 		Reward=[]
 		Mark_reward=[]
-
 		Action=[]
 		State_next=[]
-
-
 		Accumulate_reward=[]
-
 		while count<max_train_step:
 			count=count+1
-
 			while len(Play_input_data)<N_frame:
 				action=env.action_space.sample()
-				
 				env.render()
-
 				observation, reward, done, info = env.step(action)
 				if abs(reward)==1:
 					Accumulate_reward.append(reward)
@@ -304,7 +224,6 @@ while N_Q<Max_N_Q:
 					print (sum(Accumulate_reward))
 					Accumulate_reward=[]
 					env.reset()
-
 			assert len(Play_input_data)==N_frame
 			Play_input_data_ar=np.squeeze(np.array(Play_input_data))
 			State_now.append(Play_input_data_ar)
@@ -317,9 +236,7 @@ while N_Q<Max_N_Q:
 				action=np.argmax(Real_Q_value)
 			Action.append(int(action))
 			for i in range(N_delay):
-
 				env.render()
-
 				observation, reward, done, info = env.step(action)
 				if abs(reward)==1:
 					Accumulate_reward.append(reward)
@@ -333,10 +250,8 @@ while N_Q<Max_N_Q:
 					print (sum(Accumulate_reward))
 					Accumulate_reward=[]
 					env.reset()
-
 			Mark_reward.append(len(Reward)-1)
 			State_next.append(np.squeeze(np.array(Play_input_data)))
-			'''
 			Train_data=[]
 			Reward_train=[]
 			Action_train = []
@@ -373,4 +288,3 @@ while N_Q<Max_N_Q:
 		saver.save(sess, checkpoint_path, write_meta_graph=False)
 		N_Q=N_Q+1
 		print (np.mean(aver_score))
-'''
