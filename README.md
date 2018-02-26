@@ -12,7 +12,7 @@ In this repository, I implement DQN to teach the AI beat the computer in Pong ga
 
 ## Attention model
 
-No one can ingore a model who combine recurrent network, convolutional network and reinforcement learning together. According to Mnih's paper[2], recurrent attention model can finally focus on part of a image to extract the most useful information which can help action layer take an action.
+No one can ingore a model who combine recurrent network, convolutional network and reinforcement learning together. According to Mnih's paper[2], recurrent attention model can finally focus on part of a image to extract the most useful information which can help action layer take an right action.
 
 ![Alt text](/AttentionModel/ram.png)
 
