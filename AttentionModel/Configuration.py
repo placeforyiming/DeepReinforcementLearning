@@ -22,7 +22,7 @@ class Configuration_FC():
         self.epoch=1
         self.learning_rate=0.00004
         self.N_front=4
-        self.checkpoint_path = './save/FC_model'+str(self.N_front)+'.ckpt'
+        self.checkpoint_path = './save/FC_model'+str(self.epoch)+'.ckpt'
     def Return(self):
         return (self.input_layer_input_w,self.input_layer_output_w, self.input_layer_output_b, self.core_layer_input_w,self.core_layer_output_w,self.core_layer_output_b,self.action_layer_input_w,self.action_layer_output_w,self.action_layer_output_b,self.batch_size,self.epoch,self.learning_rate,self.checkpoint_path)
 

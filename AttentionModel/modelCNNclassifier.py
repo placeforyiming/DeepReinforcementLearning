@@ -44,8 +44,8 @@ class CNNclassifier(model):
         tf.set_random_seed(1337)
         #input image
         self.img = tf.placeholder(tf.float32, shape=(None, self.channels,self.time,self.img_size_x,self.img_size_y))
-        #change input and output layer size according to the dataset        
-        self.action_layer_output_w=self.n_classes  
+        #change input and output layer size according to the dataset
+        self.action_layer_output_w=self.n_classes
         self.action_layer_output_b=self.n_classes
         self.in_channels=self.channels
         #on_hot class number
@@ -73,18 +73,11 @@ class CNNclassifier(model):
     def fit(self,train_data,train_label):
         np.random.seed(1337)
         tf.set_random_seed(1337)
-        n_samples, self.channels, self.time,self.img_size_x,self.img_size_y= train_data.shape[0:5]
+        n_samples, self.channels, self.time, self.img_size_x, self.img_size_y = train_data.shape[0:5]
 
-        train_label_mat = []
-        for i in train_label:
-            train_label_mat.append([i])
-        train_label_mat = np.array(train_label_mat)
-
-        self.n_classes = 1
+        self.n_classes = self.action_layer_output_w
         Hidden_layer = self.build_model()
-        self.y_conv = tf.divide(1.0, tf.minimum(
-            tf.add(1.0, tf.exp(-(tf.matmul(Hidden_layer, self.action_layer_w) + self.action_layer_b))), 1000.0))
-
+        self.y_conv = tf.nn.softmax(tf.matmul(Hidden_layer, self.action_layer_w) + self.action_layer_b)
 
         with tf.Session() as sess:
             cross_entropy = -tf.reduce_mean(

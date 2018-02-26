@@ -12,14 +12,12 @@ class expConfig:
         self.skip_if_file_exist = skip_if_file_exist
         
     def run(self):
-        if self.skip_if_file_exist and os.path.isfile(self.resultPath):
-            print ("file exist, experiment skipped")
-            return
+
         self.setting.setup(dataset=self.dataset,
                              model=self.model,
-                             metrics=self.metrics)
+                             metrics=self.metrics,
+                             path=self.resultPath)
         self.setting.run()
-        #self.save_result(self.setting,self.resultPath)
 
     def save_result(self,result,filename):
         result.model.clean()

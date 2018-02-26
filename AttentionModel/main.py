@@ -17,11 +17,11 @@ from modelthreeDGlimpseclassifier import threeDGlimpseclassifier
 if (1):
     #0.99
     print ('Start FC Model')
-    d = datasetMNIST()
+    d = datasetMNIST_embed()
     s = HoldOut()
     e = [Accuracy()]
     m = FCclassifier(isTest=0)
-    path = 'results/'+s.name+'/'+d.name+'/'+m.name+'.pkl'
+    path = m.checkpoint_path+'.index'
     p = expConfig(dataset=d,
                 setting=s,
                 model=m,

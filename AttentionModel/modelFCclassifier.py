@@ -81,7 +81,7 @@ class FCclassifier(model):
             trainer=tf.train.AdamOptimizer(self.learning_rate)
             Grads_and_Vars = trainer.compute_gradients(cross_entropy)
             train_step=trainer.apply_gradients(grads_and_vars=Grads_and_Vars)
-            correct_prediction = tf.abs(self.y_conv-self.yy)<0.5
+            correct_prediction = tf.equal(tf.argmax(self.y_conv,axis=1), tf.squeeze(self.label))
             accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
             sess.run(tf.global_variables_initializer())
@@ -96,41 +96,41 @@ class FCclassifier(model):
                     train_data.append(train_data[index])
                     train_label.append(train_label[index])
 
-
             assert len(train_data) % self.batch_size == 0
-
 
             for i in range(self.epoch):
                 Total_acc = 0.0
-
+                count=0.0
                 for j in range(int(len(train_data) / self.batch_size-1)):
                     image=train_data[j*self.batch_size:(1+j)*self.batch_size]
                     label=np.reshape(train_label[j*self.batch_size:(1+j)*self.batch_size],(self.batch_size,1))
                     train_step.run(feed_dict={self.img: image, self.label: label})
                     train_accuracy = (accuracy.eval(feed_dict={self.img: image, self.label: label}))
-
                     Total_acc = Total_acc + train_accuracy
-                    if j%100==0:
-                        print (Total_acc/j)
+                    count=count+1
                 print("Epoch %d,training accuracy " % (i + 1))
-                print  (Total_acc / float(len(train_data) / self.batch_size))
+                print  (Total_acc /count )
             saver = tf.train.Saver()
             folder = os.path.dirname(self.checkpoint_path)
             if not gfile.Exists(folder):
                 gfile.MakeDirs(folder)
             saver.save(sess, self.checkpoint_path)
        
-    def inference(self,test_data):
+    def inference(self,test_data,test_label):
         np.random.seed(1337)
         tf.set_random_seed(1337)
         with tf.Session() as sess:
+            n_samples, self.channels, self.time, self.img_size_x, self.img_size_y = test_data.shape[0:5]
+            self.n_classes = self.action_layer_output_w
+            Hidden_layer = self.build_model()
+            self.y_conv = tf.nn.softmax(tf.matmul(Hidden_layer, self.action_layer_w) + self.action_layer_b)
             saver = tf.train.Saver()
             saver.restore(sess, self.checkpoint_path)
-
-            y_pred = tf.round(self.y_conv)
-
-            y = y_pred.eval(feed_dict={self.img: test_data})
-            print (y)
+            y = self.y_conv.eval(feed_dict={self.img: test_data})
+            correct_prediction = np.argmax(y,axis=1)
+            accuracy = np.equal(correct_prediction,test_label)
+            accuracy=np.mean(accuracy.astype(float))
+            print ("Test accuracy is : %f" %accuracy)
         return y
     
     def clean(self):

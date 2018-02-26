@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 import numpy as np
 from sklearn.model_selection import KFold
-
+import os
 class setting(object):
     __metaclass__ = ABCMeta
 
@@ -12,11 +12,11 @@ class setting(object):
         self.dataset = None
         self.metrics = None
 
-    def setup(self, dataset,model,metrics):
+    def setup(self, dataset,model,metrics,path):
         self.model=model
         self.metrics=metrics
         self.dataset=dataset
-
+        self.path=path
     @abstractmethod
     def run(self):
         return
@@ -36,7 +36,8 @@ class CrossValidation(setting):
         for train_index, test_index in kf.split(data): 
             X_train, X_test = data[train_index], data[test_index]
             y_train, y_test = label[train_index], label[test_index]
-            self.model.fit(X_train,y_train)
+            if not os.path.exists(self.path):
+                self.model.fit(X_train,y_train)
             y_predict = self.model.inference(X_test)
             for e in self.metrics:
                 e.compute(y_test,y_predict)
@@ -48,8 +49,9 @@ class HoldOut(setting):
     
     def run(self):
         X_train, y_train, X_test, y_test = self.dataset.load()
-        self.model.fit(X_train,y_train)
-        y_predict = self.model.inference(X_test)
+        if not os.path.exists(self.path):
+            self.model.fit(X_train,y_train)
+        self.model.inference(X_test,y_test)
 
         #for e in self.metrics:
         #   e.compute(y_test,y_predict)
