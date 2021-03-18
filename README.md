@@ -1,6 +1,6 @@
 # Deep Reinforcement Learning
 
-In this repository, I want to implement those most amazing deep reinforcement learning models. Hope one day, you can see a strong AI model here:)
+In this repository, I want to implement those most amazing deep reinforcement learning models.
 
 ## DQN
 
