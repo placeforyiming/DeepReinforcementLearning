@@ -4,13 +4,13 @@ Implementation of two early-stage DRL models.
 
 ## DQN
 
-DQN to teach PC the Pong game.
+DQN [1] to teach PC the Pong game.
 
 ![Alt Text](https://github.com/placeforyiming/DeepReinforcementLearning/blob/master/DQN/Pong.gif)
 
 ## Attention model
 
-Early-stage attention model.
+Early-stage attention model [2].
 
 ![Alt text](/AttentionModel/ram.png)
 
