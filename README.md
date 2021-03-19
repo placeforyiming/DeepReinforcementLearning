@@ -1,18 +1,16 @@
 # Deep Reinforcement Learning
 
-In this repository, I want to implement those most amazing deep reinforcement learning models.
+Implementation of two early-stage DRL models.
 
 ## DQN
 
-DQN is the first model which make us believe deep reinforcement learning can work[1]. From that time, deep reinforcement learning develop very fast and become the key role to help AlphaGo beat top human.
-
-In this repository, I implement DQN to teach the AI beat the computer in Pong game.
+In this repository, I implement DQN to teach the AI outperfom the computer in Pong game.
 
 ![Alt Text](https://github.com/placeforyiming/DeepReinforcementLearning/blob/master/DQN/Pong.gif)
 
 ## Attention model
 
-No one can ingore a model who combine recurrent network, convolutional network and reinforcement learning together. According to Mnih's paper[2], recurrent attention model can finally focus on part of a image to extract the most useful information which can help action layer take an right action.
+According to Mnih's paper[2], recurrent attention model can focus on part of a image to extract the most useful information which can help action layer take an right action.
 
 ![Alt text](/AttentionModel/ram.png)
 
